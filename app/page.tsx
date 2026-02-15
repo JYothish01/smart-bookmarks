@@ -13,7 +13,6 @@ export default function Home() {
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
 
-  // 🔹 Load user
   useEffect(() => {
     const loadUser = async () => {
       const { data } = await supabase.auth.getUser()
@@ -22,7 +21,6 @@ export default function Home() {
     loadUser()
   }, [])
 
-  // 🔹 Load bookmarks (private per user)
   const loadBookmarks = async () => {
     const { data: userData } = await supabase.auth.getUser()
     const currentUser = userData.user
@@ -37,12 +35,10 @@ export default function Home() {
     if (!error) setBookmarks(data || [])
   }
 
-  // Load bookmarks on mount
   useEffect(() => {
     if (user) loadBookmarks()
   }, [user])
 
-  // 🔹 Delete bookmark
   const deleteBookmark = async (id: string) => {
     const { error } = await supabase
       .from("bookmarks")
@@ -58,159 +54,168 @@ export default function Home() {
     }
   }
 
-  // 🔹 Filter
   const filtered = bookmarks.filter(
     (b) =>
-      b.title.toLowerCase().includes(search.toLowerCase()) ||
-      b.url.toLowerCase().includes(search.toLowerCase())
+      b.title?.toLowerCase().includes(search.toLowerCase()) ||
+      b.url?.toLowerCase().includes(search.toLowerCase())
   )
 
-  // 🔹 Stats
   const stats = {
     total: bookmarks.length,
     uniqueDomains: new Set(
-      bookmarks.map((b) => {
-        try {
-          return new URL(b.url).hostname
-        } catch {
-          return null
-        }
-      })
+      bookmarks
+        .map((b) => {
+          try {
+            return new URL(b.url).hostname
+          } catch {
+            return null
+          }
+        })
+        .filter(Boolean)
     ).size,
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)] text-white px-6 md:px-16 py-12">
+    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)] text-white">
 
-      {/* HEADER */}
-      <div className="relative w-full mb-16">
-        <h1 className="text-4xl md:text-5xl font-bold text-center tracking-tight">
-          Smart Bookmarks
-        </h1>
+      {/* MAIN CONTAINER */}
+      <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
-        <div className="absolute right-0 top-1/2 -translate-y-1/2 flex items-center gap-4">
+        {/* HEADER */}
+        <div className="flex flex-col md:flex-row justify-between items-center gap-6 mb-14">
+          <h1 className="text-3xl sm:text-4xl md:text-5xl font-bold tracking-tight text-center md:text-left">
+            Smart Bookmarks
+          </h1>
+
           {user && (
-            <>
-              <span className="text-sm text-gray-300">
+            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
+              <span className="text-sm text-gray-300 break-all">
                 {user.email}
               </span>
               <button
                 onClick={() => supabase.auth.signOut()}
-                className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
+                className="w-full sm:w-auto px-5 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
               >
                 Logout
               </button>
-            </>
+            </div>
           )}
         </div>
-      </div>
 
-      {/* ADD BUTTON */}
-      <div className="max-w-5xl mx-auto mb-8 flex justify-end">
-        <button
-          onClick={() => {
-            setEditing(null)
-            setOpen(true)
-          }}
-          className="bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition"
-        >
-          + Add Bookmark
-        </button>
-      </div>
-
-      {/* STATS */}
-      <div className="grid md:grid-cols-2 gap-8 mb-12 max-w-5xl mx-auto">
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl">
-          <p className="text-gray-400 text-sm">Total Bookmarks</p>
-          <h2 className="text-4xl font-bold mt-2">{stats.total}</h2>
+        {/* ADD BUTTON */}
+        <div className="flex justify-end mb-10">
+          <button
+            onClick={() => {
+              setEditing(null)
+              setOpen(true)
+            }}
+            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition text-sm sm:text-base"
+          >
+            + Add Bookmark
+          </button>
         </div>
 
-        <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl">
-          <p className="text-gray-400 text-sm">Unique Domains</p>
-          <h2 className="text-4xl font-bold mt-2">
-            {stats.uniqueDomains}
-          </h2>
-        </div>
-      </div>
+        {/* STATS */}
+        <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
+            <p className="text-gray-400 text-sm">Total Bookmarks</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mt-2">
+              {stats.total}
+            </h2>
+          </div>
 
-      {/* SEARCH */}
-      <div className="mb-12 max-w-5xl mx-auto">
-        <input
-          placeholder="🔎 Search bookmarks..."
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-          className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 
-          focus:ring-2 focus:ring-blue-500 outline-none transition text-lg"
+          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
+            <p className="text-gray-400 text-sm">Unique Domains</p>
+            <h2 className="text-3xl sm:text-4xl font-bold mt-2">
+              {stats.uniqueDomains}
+            </h2>
+          </div>
+        </div>
+
+        {/* SEARCH */}
+        <div className="mb-12">
+          <input
+            placeholder="🔎 Search bookmarks..."
+            value={search}
+            onChange={(e) => setSearch(e.target.value)}
+            className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 
+            focus:ring-2 focus:ring-blue-500 outline-none transition text-base sm:text-lg"
+          />
+        </div>
+
+        {/* BOOKMARK LIST */}
+        <div className="space-y-6">
+          {filtered.map((bookmark) => {
+            let domain = ""
+            try {
+              domain = new URL(bookmark.url).hostname
+            } catch {}
+
+            const favicon = `https://www.google.com/s2/favicons?domain=${domain}`
+
+            return (
+              <motion.div
+                key={bookmark.id}
+                whileHover={{ y: -4 }}
+                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl transition"
+              >
+                <div className="flex items-center gap-3 mb-4">
+                  <img
+                    src={favicon}
+                    className="w-6 h-6"
+                    alt="favicon"
+                  />
+                  <h3 className="text-lg sm:text-xl font-semibold break-words">
+                    {bookmark.title}
+                  </h3>
+                </div>
+
+                <a
+                  href={bookmark.url}
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  className="text-blue-400 hover:underline break-all text-sm sm:text-base"
+                >
+                  {bookmark.url}
+                </a>
+
+                {bookmark.category && (
+                  <div className="mt-3 inline-block px-3 py-1 bg-blue-600/20 text-blue-400 text-xs rounded-full">
+                    {bookmark.category}
+                  </div>
+                )}
+
+                <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                  <button
+                    onClick={() => {
+                      setEditing(bookmark)
+                      setOpen(true)
+                    }}
+                    className="w-full sm:w-auto px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-sm transition"
+                  >
+                    Edit
+                  </button>
+
+                  <button
+                    onClick={() => deleteBookmark(bookmark.id)}
+                    className="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
+                  >
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            )
+          })}
+        </div>
+
+        {/* MODAL */}
+        <BookmarkModal
+          open={open}
+          setOpen={setOpen}
+          initial={editing}
+          refreshBookmarks={loadBookmarks}
         />
       </div>
-
-      {/* BOOKMARK LIST */}
-      <div className="space-y-8 max-w-5xl mx-auto">
-        {filtered.map((bookmark) => {
-          let domain = ""
-          try {
-            domain = new URL(bookmark.url).hostname
-          } catch {}
-
-          const favicon = `https://www.google.com/s2/favicons?domain=${domain}`
-
-          return (
-            <motion.div
-              key={bookmark.id}
-              whileHover={{ y: -4 }}
-              className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-8 shadow-xl"
-            >
-              <div className="flex items-center gap-4 mb-4">
-                <img src={favicon} className="w-6 h-6" />
-                <h3 className="text-xl font-semibold">
-                  {bookmark.title}
-                </h3>
-              </div>
-
-              <a
-                href={bookmark.url}
-                target="_blank"
-                className="text-blue-400 hover:underline break-all"
-              >
-                {bookmark.url}
-              </a>
-
-              {bookmark.category && (
-                <div className="mt-3 inline-block px-3 py-1 bg-blue-600/20 text-blue-400 text-xs rounded-full">
-                  {bookmark.category}
-                </div>
-              )}
-
-              <div className="flex gap-3 mt-6">
-                <button
-                  onClick={() => {
-                    setEditing(bookmark)
-                    setOpen(true)
-                  }}
-                  className="px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-sm transition"
-                >
-                  Edit
-                </button>
-
-                <button
-                  onClick={() => deleteBookmark(bookmark.id)}
-                  className="px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
-                >
-                  Delete
-                </button>
-              </div>
-            </motion.div>
-          )
-        })}
-      </div>
-
-      {/* MODAL */}
-      <BookmarkModal
-        open={open}
-        setOpen={setOpen}
-        initial={editing}
-        refreshBookmarks={loadBookmarks}
-      />
     </div>
   )
 }

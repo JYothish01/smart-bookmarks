@@ -28,7 +28,6 @@ export default function BookmarkModal({
   const [category, setCategory] = useState("")
   const [loading, setLoading] = useState(false)
 
-  // Prefill when editing
   useEffect(() => {
     if (initial) {
       setTitle(initial.title || "")
@@ -64,7 +63,6 @@ export default function BookmarkModal({
     setLoading(true)
 
     try {
-      // Get current session
       const { data: sessionData, error: sessionError } =
         await supabase.auth.getSession()
 
@@ -77,22 +75,15 @@ export default function BookmarkModal({
       const user = sessionData.session.user
 
       if (initial) {
-        // UPDATE
         const { error } = await supabase
           .from("bookmarks")
-          .update({
-            title,
-            url,
-            category,
-          })
+          .update({ title, url, category })
           .eq("id", initial.id)
-          .eq("user_id", user.id) // extra safety
+          .eq("user_id", user.id)
 
         if (error) throw error
-
         toast.success("Bookmark updated 🚀")
       } else {
-        // INSERT
         const { error } = await supabase.from("bookmarks").insert({
           title,
           url,
@@ -102,7 +93,6 @@ export default function BookmarkModal({
         })
 
         if (error) throw error
-
         toast.success("Bookmark added 🚀")
       }
 
@@ -118,42 +108,107 @@ export default function BookmarkModal({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogContent className="bg-slate-900 text-white border border-white/10">
+      <DialogContent
+        className="
+          w-[95%] sm:w-full
+          max-w-lg
+          bg-slate-900
+          text-white
+          border border-white/10
+          rounded-2xl
+          p-6 sm:p-8
+        "
+      >
         <DialogHeader>
-          <DialogTitle className="text-xl">
+          <DialogTitle className="text-lg sm:text-xl font-semibold">
             {initial ? "Edit Bookmark" : "Add Bookmark"}
           </DialogTitle>
         </DialogHeader>
 
-        <div className="space-y-4 mt-4">
+        <div className="space-y-4 mt-6">
+
           <input
-            className="w-full p-3 rounded-lg bg-white/5 border border-white/10 outline-none focus:ring-2 focus:ring-blue-500"
+            className="
+              w-full p-3 sm:p-4
+              rounded-xl
+              bg-white/5
+              border border-white/10
+              outline-none
+              focus:ring-2 focus:ring-blue-500
+              transition
+              text-sm sm:text-base
+            "
             placeholder="Title"
             value={title}
             onChange={(e) => setTitle(e.target.value)}
           />
 
           <input
-            className="w-full p-3 rounded-lg bg-white/5 border border-white/10 outline-none focus:ring-2 focus:ring-blue-500"
+            className="
+              w-full p-3 sm:p-4
+              rounded-xl
+              bg-white/5
+              border border-white/10
+              outline-none
+              focus:ring-2 focus:ring-blue-500
+              transition
+              text-sm sm:text-base
+            "
             placeholder="https://example.com"
             value={url}
             onChange={(e) => setUrl(e.target.value)}
           />
 
           <input
-            className="w-full p-3 rounded-lg bg-white/5 border border-white/10 outline-none focus:ring-2 focus:ring-blue-500"
+            className="
+              w-full p-3 sm:p-4
+              rounded-xl
+              bg-white/5
+              border border-white/10
+              outline-none
+              focus:ring-2 focus:ring-blue-500
+              transition
+              text-sm sm:text-base
+            "
             placeholder="Category (optional)"
             value={category}
             onChange={(e) => setCategory(e.target.value)}
           />
 
-          <button
-            onClick={save}
-            disabled={loading}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-medium disabled:opacity-50"
-          >
-            {loading ? "Saving..." : "Save"}
-          </button>
+          <div className="flex flex-col sm:flex-row gap-3 pt-2">
+            <button
+              onClick={() => setOpen(false)}
+              className="
+                w-full sm:w-auto
+                px-4 py-2
+                rounded-lg
+                border border-white/20
+                hover:bg-white/10
+                transition
+                text-sm
+              "
+            >
+              Cancel
+            </button>
+
+            <button
+              onClick={save}
+              disabled={loading}
+              className="
+                w-full sm:w-auto
+                bg-blue-600
+                hover:bg-blue-700
+                transition
+                px-6 py-2
+                rounded-lg
+                font-medium
+                disabled:opacity-50
+                text-sm
+              "
+            >
+              {loading ? "Saving..." : "Save"}
+            </button>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
