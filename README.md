@@ -83,8 +83,9 @@ ON bookmarks
 FOR ALL
 USING (auth.uid() = user_id)
 WITH CHECK (auth.uid() = user_id);
-
+```
 ## Challenges Faced & How I Solved Them
+
 1. Google login was working locally but failed after deployment on Vercel. The app did not redirect back properly after authentication.
 🔍 Root Cause
 Production URL was not configured correctly in:
