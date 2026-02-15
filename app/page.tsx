@@ -5,6 +5,7 @@ import { supabase } from "@/lib/supabaseClient"
 import { motion } from "framer-motion"
 import toast from "react-hot-toast"
 import BookmarkModal from "@/components/ui/BookmarkModal"
+import { useTheme } from "@/hooks/useTheme"
 
 export default function Home() {
   const [user, setUser] = useState<any>(null)
@@ -12,6 +13,8 @@ export default function Home() {
   const [search, setSearch] = useState("")
   const [open, setOpen] = useState(false)
   const [editing, setEditing] = useState<any>(null)
+
+  const { theme, toggleTheme } = useTheme()
 
   useEffect(() => {
     const loadUser = async () => {
@@ -76,9 +79,15 @@ export default function Home() {
   }
 
   return (
-    <div className="min-h-screen bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)] text-white">
-
-      {/* MAIN CONTAINER */}
+    <div
+      className="
+        min-h-screen
+        transition-colors duration-300
+        bg-white text-slate-900
+        dark:bg-[radial-gradient(circle_at_top,_#1e293b,_#020617)]
+        dark:text-white
+      "
+    >
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-12">
 
         {/* HEADER */}
@@ -87,19 +96,44 @@ export default function Home() {
             Smart Bookmarks
           </h1>
 
-          {user && (
-            <div className="flex flex-col sm:flex-row items-center gap-3 text-center sm:text-left">
-              <span className="text-sm text-gray-300 break-all">
-                {user.email}
-              </span>
-              <button
-                onClick={() => supabase.auth.signOut()}
-                className="w-full sm:w-auto px-5 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
-              >
-                Logout
-              </button>
-            </div>
-          )}
+          <div className="flex flex-col sm:flex-row items-center gap-3">
+
+            {/* THEME TOGGLE */}
+            <button
+              onClick={toggleTheme}
+              className="
+                px-4 py-2 rounded-lg
+                border
+                border-gray-300
+                dark:border-white/20
+                hover:bg-gray-100
+                dark:hover:bg-white/10
+                transition text-sm
+              "
+            >
+              {theme === "dark" ? "☀️ Light" : "🌙 Dark"}
+            </button>
+
+            {/* USER + LOGOUT */}
+            {user && (
+              <>
+                <span className="text-sm text-gray-600 dark:text-gray-300 break-all">
+                  {user.email}
+                </span>
+                <button
+                  onClick={() => supabase.auth.signOut()}
+                  className="
+                    w-full sm:w-auto
+                    px-5 py-2
+                    bg-red-500 hover:bg-red-600
+                    rounded-lg text-sm transition
+                  "
+                >
+                  Logout
+                </button>
+              </>
+            )}
+          </div>
         </div>
 
         {/* ADD BUTTON */}
@@ -109,7 +143,12 @@ export default function Home() {
               setEditing(null)
               setOpen(true)
             }}
-            className="w-full sm:w-auto bg-blue-600 hover:bg-blue-700 px-6 py-3 rounded-lg transition text-sm sm:text-base"
+            className="
+              w-full sm:w-auto
+              bg-blue-600 hover:bg-blue-700
+              px-6 py-3 rounded-lg
+              transition text-sm sm:text-base
+            "
           >
             + Add Bookmark
           </button>
@@ -117,15 +156,19 @@ export default function Home() {
 
         {/* STATS */}
         <div className="grid grid-cols-1 sm:grid-cols-2 gap-6 mb-12">
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
-            <p className="text-gray-400 text-sm">Total Bookmarks</p>
+          <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Total Bookmarks
+            </p>
             <h2 className="text-3xl sm:text-4xl font-bold mt-2">
               {stats.total}
             </h2>
           </div>
 
-          <div className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl">
-            <p className="text-gray-400 text-sm">Unique Domains</p>
+          <div className="bg-gray-100 dark:bg-white/5 border border-gray-200 dark:border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl backdrop-blur-xl">
+            <p className="text-gray-500 dark:text-gray-400 text-sm">
+              Unique Domains
+            </p>
             <h2 className="text-3xl sm:text-4xl font-bold mt-2">
               {stats.uniqueDomains}
             </h2>
@@ -138,77 +181,65 @@ export default function Home() {
             placeholder="🔎 Search bookmarks..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            className="w-full p-4 rounded-2xl bg-white/5 border border-white/10 
-            focus:ring-2 focus:ring-blue-500 outline-none transition text-base sm:text-lg"
+            className="
+              w-full p-4 rounded-2xl
+              bg-gray-100 dark:bg-white/5
+              border border-gray-200 dark:border-white/10
+              focus:ring-2 focus:ring-blue-500
+              outline-none transition
+              text-base sm:text-lg
+            "
           />
         </div>
 
         {/* BOOKMARK LIST */}
         <div className="space-y-6">
-          {filtered.map((bookmark) => {
-            let domain = ""
-            try {
-              domain = new URL(bookmark.url).hostname
-            } catch {}
+          {filtered.map((bookmark) => (
+            <motion.div
+              key={bookmark.id}
+              whileHover={{ y: -4 }}
+              className="
+                bg-gray-100 dark:bg-white/5
+                border border-gray-200 dark:border-white/10
+                rounded-2xl p-6 sm:p-8
+                shadow-xl backdrop-blur-xl transition
+              "
+            >
+              <h3 className="text-lg sm:text-xl font-semibold break-words mb-2">
+                {bookmark.title}
+              </h3>
 
-            const favicon = `https://www.google.com/s2/favicons?domain=${domain}`
-
-            return (
-              <motion.div
-                key={bookmark.id}
-                whileHover={{ y: -4 }}
-                className="bg-white/5 backdrop-blur-xl border border-white/10 rounded-2xl p-6 sm:p-8 shadow-xl transition"
+              <a
+                href={bookmark.url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-blue-500 dark:text-blue-400 hover:underline break-all text-sm sm:text-base"
               >
-                <div className="flex items-center gap-3 mb-4">
-                  <img
-                    src={favicon}
-                    className="w-6 h-6"
-                    alt="favicon"
-                  />
-                  <h3 className="text-lg sm:text-xl font-semibold break-words">
-                    {bookmark.title}
-                  </h3>
-                </div>
+                {bookmark.url}
+              </a>
 
-                <a
-                  href={bookmark.url}
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  className="text-blue-400 hover:underline break-all text-sm sm:text-base"
+              <div className="flex flex-col sm:flex-row gap-3 mt-6">
+                <button
+                  onClick={() => {
+                    setEditing(bookmark)
+                    setOpen(true)
+                  }}
+                  className="w-full sm:w-auto px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-sm transition"
                 >
-                  {bookmark.url}
-                </a>
+                  Edit
+                </button>
 
-                {bookmark.category && (
-                  <div className="mt-3 inline-block px-3 py-1 bg-blue-600/20 text-blue-400 text-xs rounded-full">
-                    {bookmark.category}
-                  </div>
-                )}
-
-                <div className="flex flex-col sm:flex-row gap-3 mt-6">
-                  <button
-                    onClick={() => {
-                      setEditing(bookmark)
-                      setOpen(true)
-                    }}
-                    className="w-full sm:w-auto px-4 py-2 bg-yellow-500 hover:bg-yellow-600 rounded-lg text-sm transition"
-                  >
-                    Edit
-                  </button>
-
-                  <button
-                    onClick={() => deleteBookmark(bookmark.id)}
-                    className="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
-                  >
-                    Delete
-                  </button>
-                </div>
-              </motion.div>
-            )
-          })}
+                <button
+                  onClick={() => deleteBookmark(bookmark.id)}
+                  className="w-full sm:w-auto px-4 py-2 bg-red-500 hover:bg-red-600 rounded-lg text-sm transition"
+                >
+                  Delete
+                </button>
+              </div>
+            </motion.div>
+          ))}
         </div>
 
-        {/* MODAL */}
         <BookmarkModal
           open={open}
           setOpen={setOpen}
