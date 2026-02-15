@@ -14,7 +14,7 @@ interface Props {
   open: boolean
   setOpen: (value: boolean) => void
   initial?: any
-  refreshBookmarks: () => void   // 👈 IMPORTANT
+  refreshBookmarks: () => void
 }
 
 export default function BookmarkModal({
@@ -26,6 +26,7 @@ export default function BookmarkModal({
   const [title, setTitle] = useState("")
   const [url, setUrl] = useState("")
   const [category, setCategory] = useState("")
+  const [loading, setLoading] = useState(false)
 
   // Prefill when editing
   useEffect(() => {
@@ -40,21 +41,41 @@ export default function BookmarkModal({
     }
   }, [initial, open])
 
+  const isValidUrl = (value: string) => {
+    try {
+      new URL(value)
+      return true
+    } catch {
+      return false
+    }
+  }
+
   const save = async () => {
     if (!title || !url) {
-      toast.error("All fields required")
+      toast.error("Title and URL are required")
       return
     }
 
-    const { data: userData } = await supabase.auth.getUser()
-    const user = userData.user
-
-    if (!user) {
-      toast.error("Not authenticated")
+    if (!isValidUrl(url)) {
+      toast.error("Please enter a valid URL (include https://)")
       return
     }
+
+    setLoading(true)
 
     try {
+      // Get current session
+      const { data: sessionData, error: sessionError } =
+        await supabase.auth.getSession()
+
+      if (sessionError || !sessionData.session) {
+        toast.error("You must be logged in")
+        setLoading(false)
+        return
+      }
+
+      const user = sessionData.session.user
+
       if (initial) {
         // UPDATE
         const { error } = await supabase
@@ -65,32 +86,34 @@ export default function BookmarkModal({
             category,
           })
           .eq("id", initial.id)
+          .eq("user_id", user.id) // extra safety
 
         if (error) throw error
 
-        toast.success("Bookmark updated")
+        toast.success("Bookmark updated 🚀")
       } else {
         // INSERT
-        const { error } = await supabase
-          .from("bookmarks")
-          .insert({
-            title,
-            url,
-            category,
-            user_id: user.id,          // ✅ Required for privacy
-            position: Date.now(),      // ✅ Required for sorting
-          })
+        const { error } = await supabase.from("bookmarks").insert({
+          title,
+          url,
+          category,
+          user_id: user.id,
+          position: Date.now(),
+        })
 
         if (error) throw error
 
-        toast.success("Bookmark added")
+        toast.success("Bookmark added 🚀")
       }
 
-      refreshBookmarks() // 👈 re-fetch instead of reload
+      refreshBookmarks()
       setOpen(false)
-    } catch (err: any) {
-      toast.error(err.message || "Something went wrong")
+    } catch (error: any) {
+      console.error("Supabase error:", error)
+      toast.error(error.message || "Failed to save bookmark")
     }
+
+    setLoading(false)
   }
 
   return (
@@ -126,9 +149,10 @@ export default function BookmarkModal({
 
           <button
             onClick={save}
-            className="w-full bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-medium"
+            disabled={loading}
+            className="w-full bg-blue-600 hover:bg-blue-700 transition p-3 rounded-lg font-medium disabled:opacity-50"
           >
-            Save
+            {loading ? "Saving..." : "Save"}
           </button>
         </div>
       </DialogContent>
